@@ -1,0 +1,23 @@
+{
+  "name": "ez-pto-server",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^25.4.0",
+    "drizzle-kit": "^0.31.9",
+    "tsx": "^4.21.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@clerk/backend": "^3.2.0",
+    "drizzle-orm": "^0.45.1",
+    "graphql": "^16.13.1",
+    "graphql-yoga": "^5.18.1",
+    "postgres": "^3.4.8",
+    "svix": "^1.87.0"
+  }
+}
