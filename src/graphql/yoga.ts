@@ -59,7 +59,15 @@ const typeDefs = /* GraphQL */ `
   }
 
   type Mutation {
+    """
+    Updates the user's email in Clerk and mirrors it to the local DB.
+    """
     changeEmail(newEmail: String!): User!
+    """
+    Updates only the `email` column for the signed-in user in the local database.
+    Does not call Clerk — use when you manage email elsewhere or want a manual DB fix.
+    """
+    changeEmailInDb(newEmail: String!): User!
   }
 `;
 
@@ -126,6 +134,55 @@ const resolvers = {
           set: {
             email: newEmail,
             name,
+            updatedAt: new Date(),
+          },
+        })
+        .returning();
+
+      if (!row) {
+        throw new GraphQLError('Failed to update user record', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR' },
+        });
+      }
+
+      return row;
+    },
+
+    changeEmailInDb: async (
+      _: unknown,
+      args: { newEmail: string },
+      ctx: YogaContext,
+    ) => {
+      if (!ctx.userId) {
+        throw new GraphQLError('Not authenticated', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+
+      const newEmail = args.newEmail.trim().toLowerCase();
+      if (!newEmail || !newEmail.includes('@')) {
+        throw new GraphQLError('Invalid email', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+
+      const existing = await db.query.users.findFirst({
+        where: (u, { eq: eqCol }) => eqCol(u.clerkId, ctx.userId as string),
+      });
+
+      const name = existing?.name ?? '';
+
+      const [row] = await db
+        .insert(users)
+        .values({
+          clerkId: ctx.userId,
+          email: newEmail,
+          name,
+        })
+        .onConflictDoUpdate({
+          target: users.clerkId,
+          set: {
+            email: newEmail,
             updatedAt: new Date(),
           },
         })
