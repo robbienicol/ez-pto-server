@@ -64,7 +64,7 @@ const typeDefs = /* GraphQL */ `
     """
     changeEmail(newEmail: String!): User!
     """
-    Updates only the `email` column for the signed-in user in the local database.
+    Updates only the email column for the signed-in user in the local database.
     Does not call Clerk — use when you manage email elsewhere or want a manual DB fix.
     """
     changeEmailInDb(newEmail: String!): User!
