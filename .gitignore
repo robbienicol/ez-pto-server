@@ -1,6 +1,9 @@
 # dependencies (bun install)
 node_modules
 
+# generated audio (local dev)
+data/
+
 # output
 out
 dist

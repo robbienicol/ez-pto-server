@@ -1,5 +1,7 @@
+import { join } from 'node:path';
 import { handleClerkWebhook } from './webhooks/clerk';
 import { yoga } from './graphql/yoga';
+import { audioStorageDir, isSafeAudioFilename } from './services/audioStorage';
 
 Bun.serve({
   hostname: '0.0.0.0',
@@ -12,6 +14,24 @@ Bun.serve({
     },
     '/webhooks/clerk': {
       POST: handleClerkWebhook,
+    },
+    '/media/audio/:filename': {
+      GET: async (req) => {
+        const name = req.params.filename;
+        if (!name || !isSafeAudioFilename(name)) {
+          return new Response('Not found', { status: 404 });
+        }
+        const file = Bun.file(join(audioStorageDir(), name));
+        if (!(await file.exists())) {
+          return new Response('Not found', { status: 404 });
+        }
+        return new Response(file, {
+          headers: {
+            'Content-Type': 'audio/wav',
+            'Cache-Control': 'public, max-age=3600',
+          },
+        });
+      },
     },
   },
   fetch(req) {
